@@ -10,9 +10,7 @@ app.register_blueprint(dashboard_bp)
 
 @app.route("/")
 def home():
-    return {
-        "message": "Backend running successfully"
-    }
+    return {"message": "Backend running successfully"}
 
 if __name__ == "__main__":
     app.run(host="localhost", port=5000, debug=True)
