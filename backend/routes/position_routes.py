@@ -1,9 +1,16 @@
 from flask import Blueprint, jsonify
+from services.position_service import get_positions
 
-position_routes_bp = Blueprint("position_routes", __name__)
+position_bp = Blueprint("position", __name__)
 
-@position_routes_bp.route("/api/position", methods=["GET"])
-def get_position_routes():
-    return jsonify({
-        "message": "position_routes working"
-    })
+
+@position_bp.route("/api/positions", methods=["GET"])
+def positions():
+    try:
+        data = get_positions()
+        return jsonify(data), 200
+    except Exception as error:
+        return jsonify({
+            "message": "Cannot load positions",
+            "error": str(error)
+        }), 500
