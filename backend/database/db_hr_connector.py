@@ -9,4 +9,5 @@ def get_hr_connection():
         "Trusted_Connection=yes;"
         "TrustServerCertificate=yes;"
     )
+
     return pyodbc.connect(conn_str)
