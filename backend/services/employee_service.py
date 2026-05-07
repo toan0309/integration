@@ -80,7 +80,7 @@ def add_employee(payload):
         payload.get("HireDate"),
         payload.get("DepartmentID"),
         payload.get("PositionID"),
-        payload.get("Status", "Dang lam viec")
+        payload.get("Status", "Đang làm việc")
     ))
 
     conn.commit()
