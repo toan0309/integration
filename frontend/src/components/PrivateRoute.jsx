@@ -1,24 +1,27 @@
 import { Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import TokenStorage from '../utils/tokenStorage';
 
-/**
- * PrivateRoute Component
- * Protects routes that require authentication
- */
 function PrivateRoute({ children, requiredRoles = [] }) {
-  const isAuthenticated = TokenStorage.isAuthenticated();
-  const userRoles = TokenStorage.getUserRoles();
+  const { isAuthenticated, isLoading } = useAuth();
 
-  // Check authentication
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <span className="spinner spinner-primary" style={{ width: '2rem', height: '2rem' }} />
+      </div>
+    );
+  }
+
   if (!isAuthenticated) {
     return <Navigate to="/auth/login" replace />;
   }
 
-  // Check roles if specified
   if (requiredRoles.length > 0) {
-    const hasRequiredRole = requiredRoles.some(role => userRoles.includes(role));
-    if (!hasRequiredRole) {
-      return <Navigate to="/unauthorized" replace />;
+    const userRoles = TokenStorage.getUserRoles();
+    const hasAccess = requiredRoles.some(r => userRoles.includes(r));
+    if (!hasAccess) {
+      return <Navigate to="/dashboard" replace />;
     }
   }
 

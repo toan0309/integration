@@ -1,12 +1,16 @@
 import { Navigate } from 'react-router-dom';
-import TokenStorage from '../utils/tokenStorage';
+import { useAuth } from '../context/AuthContext';
 
-/**
- * PublicRoute Component
- * Allows public access but redirects to dashboard if already authenticated
- */
 function PublicRoute({ children }) {
-  const isAuthenticated = TokenStorage.isAuthenticated();
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <span className="spinner spinner-primary" style={{ width: '2rem', height: '2rem' }} />
+      </div>
+    );
+  }
 
   // If already logged in, redirect to dashboard
   if (isAuthenticated) {

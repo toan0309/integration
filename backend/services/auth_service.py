@@ -4,7 +4,9 @@ from backend.database.db_auth_connector import auth_db
 from backend.auth.jwt_handler import jwt_handler
 from backend.auth.password_hasher import password_hasher
 from backend.validation.auth_validation import auth_validation
+from backend.services.email_service import email_service
 import secrets
+import random
 import os
 
 class AuthService:
@@ -96,7 +98,7 @@ class AuthService:
         
         # Get user roles
         roles = auth_db.get_user_roles(user['user_id'])
-        role_names = [role['role_name'] for role in roles]
+        role_names = [role['role_name'].lower() for role in roles]
         
         # Create tokens
         access_token = jwt_handler.create_access_token(
@@ -162,14 +164,11 @@ class AuthService:
         # Get user
         user = auth_db.get_user_by_email(email.strip().lower())
         if not user:
-            # Don't reveal if email exists (security best practice)
-            return True, {
-                'message': 'If this email exists, a reset link has been sent'
-            }
+            return False, {'error': 'Email is not registered in the system'}
         
-        # Generate reset token
-        reset_token = secrets.token_urlsafe(32)
-        expires_at = datetime.utcnow() + timedelta(hours=1)
+        # Generate 6-digit OTP
+        reset_token = f"{random.randint(0, 999999):06d}"
+        expires_at = datetime.now() + timedelta(hours=1)
         
         # Store token in database
         success, msg = auth_db.create_reset_token(
@@ -181,12 +180,11 @@ class AuthService:
         if not success:
             return False, {'error': 'Failed to create reset token'}
         
-        # TODO: Send email with reset link
-        # Email should contain: reset_token and reset_url
+        # Send email with OTP asynchronously
+        email_service.send_otp_email(email, reset_token)
         
         return True, {
-            'message': 'If this email exists, a reset link has been sent',
-            'reset_token': reset_token  # In production, don't send token directly
+            'message': 'A 6-digit verification code has been sent to your email.'
         }
     
     @staticmethod
@@ -314,7 +312,7 @@ class AuthService:
         
         # Get user roles
         roles = auth_db.get_user_roles(user_id)
-        role_names = [role['role_name'] for role in roles]
+        role_names = [role['role_name'].lower() for role in roles]
         
         return True, {
             'user_id': user['user_id'],

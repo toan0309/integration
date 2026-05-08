@@ -37,11 +37,15 @@ def register():
         success, result = auth_service.register_user(email, password, full_name, phone)
         
         if success:
+            print(f"Registration Success: {email}")
             return success_response(result, 201)
         else:
-            return error_response(result.get('error', 'Registration failed'), 400)
+            err = result.get('error', 'Registration failed')
+            print(f"Registration Error for {email}: {err}")
+            return error_response(err, 400)
     
     except Exception as e:
+        print(f"Registration Exception: {str(e)}")
         return error_response(f"Server error: {str(e)}", 500)
 
 # Login endpoint

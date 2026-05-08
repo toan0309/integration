@@ -1,144 +1,67 @@
-/**
- * Token Storage Utility
- * Manages storage and retrieval of JWT tokens
- */
+const TOKEN_KEY = 'hr_access_token';
+const REFRESH_KEY = 'hr_refresh_token';
+const USER_KEY = 'hr_user';
 
-const TOKEN_KEY = 'access_token';
-const REFRESH_TOKEN_KEY = 'refresh_token';
-const USER_KEY = 'user_data';
+const TokenStorage = {
+  saveTokens(accessToken, refreshToken) {
+    localStorage.setItem(TOKEN_KEY, accessToken);
+    if (refreshToken) localStorage.setItem(REFRESH_KEY, refreshToken);
+  },
 
-class TokenStorage {
-  /**
-   * Save tokens to local storage
-   */
-  static saveTokens(accessToken, refreshToken) {
+  getAccessToken() {
+    return localStorage.getItem(TOKEN_KEY);
+  },
+
+  getRefreshToken() {
+    return localStorage.getItem(REFRESH_KEY);
+  },
+
+  saveUser(userData) {
+    localStorage.setItem(USER_KEY, JSON.stringify(userData));
+  },
+
+  getUser() {
     try {
-      localStorage.setItem(TOKEN_KEY, accessToken);
-      if (refreshToken) {
-        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-      }
-    } catch (error) {
-      console.error('Error saving tokens:', error);
-    }
-  }
-
-  /**
-   * Get access token
-   */
-  static getAccessToken() {
-    try {
-      return localStorage.getItem(TOKEN_KEY);
-    } catch (error) {
-      console.error('Error retrieving access token:', error);
+      const raw = localStorage.getItem(USER_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
       return null;
     }
-  }
+  },
 
-  /**
-   * Get refresh token
-   */
-  static getRefreshToken() {
+  updateUser(updated) {
+    const current = this.getUser() || {};
+    this.saveUser({ ...current, ...updated });
+  },
+
+  getUserRoles() {
+    const user = this.getUser();
+    if (!user) return [];
+    // Support both [{ role_name }] and ['admin', ...] formats
+    if (!user.roles) return [];
+    return user.roles.map(r => {
+      const roleName = typeof r === 'string' ? r : (r.role_name || r);
+      return typeof roleName === 'string' ? roleName.toLowerCase() : '';
+    });
+  },
+
+  isAuthenticated() {
+    const token = this.getAccessToken();
+    if (!token) return false;
     try {
-      return localStorage.getItem(REFRESH_TOKEN_KEY);
-    } catch (error) {
-      console.error('Error retrieving refresh token:', error);
-      return null;
+      // Decode JWT payload (base64)
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp > Date.now() / 1000;
+    } catch {
+      return !!token; // Treat as valid if can't decode
     }
-  }
+  },
 
-  /**
-   * Save user data
-   */
-  static saveUser(userData) {
-    try {
-      localStorage.setItem(USER_KEY, JSON.stringify(userData));
-    } catch (error) {
-      console.error('Error saving user data:', error);
-    }
-  }
-
-  /**
-   * Get user data
-   */
-  static getUser() {
-    try {
-      const userData = localStorage.getItem(USER_KEY);
-      return userData ? JSON.parse(userData) : null;
-    } catch (error) {
-      console.error('Error retrieving user data:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Check if user is authenticated
-   */
-  static isAuthenticated() {
-    return !!this.getAccessToken();
-  }
-
-  /**
-   * Check if token has specific role
-   */
-  static hasRole(role) {
-    const user = this.getUser();
-    return user && user.roles && user.roles.includes(role);
-  }
-
-  /**
-   * Check if token has any of the specified roles
-   */
-  static hasAnyRole(roles) {
-    const user = this.getUser();
-    if (!user || !user.roles) return false;
-    return roles.some(role => user.roles.includes(role));
-  }
-
-  /**
-   * Clear all tokens and user data
-   */
-  static clear() {
-    try {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
-      localStorage.removeItem(USER_KEY);
-    } catch (error) {
-      console.error('Error clearing tokens:', error);
-    }
-  }
-
-  /**
-   * Update user data
-   */
-  static updateUser(userData) {
-    const current = this.getUser();
-    const updated = { ...current, ...userData };
-    this.saveUser(updated);
-  }
-
-  /**
-   * Get user ID
-   */
-  static getUserId() {
-    const user = this.getUser();
-    return user ? user.user_id : null;
-  }
-
-  /**
-   * Get user email
-   */
-  static getUserEmail() {
-    const user = this.getUser();
-    return user ? user.email : null;
-  }
-
-  /**
-   * Get user roles
-   */
-  static getUserRoles() {
-    const user = this.getUser();
-    return user ? user.roles || [] : [];
-  }
-}
+  clear() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(REFRESH_KEY);
+    localStorage.removeItem(USER_KEY);
+  },
+};
 
 export default TokenStorage;
