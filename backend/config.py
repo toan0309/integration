@@ -12,4 +12,5 @@ class Config:
     MYSQL_HOST = os.getenv("MYSQL_HOST", "localhost")
     MYSQL_USER = os.getenv("MYSQL_USER", "root")
     MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
-    MYSQL_DATABASE = os.getenv("MYSQL_DATABASE", "payroll_2026")
+    MYSQL_PAYROLL_DB = os.getenv("MYSQL_PAYROLL_DB", "payroll_2026")
+    MYSQL_AUTH_DB = os.getenv("MYSQL_AUTH_DB", "auth_db")
